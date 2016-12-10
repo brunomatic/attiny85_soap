@@ -11,8 +11,9 @@
 void init_eeprom_control();
 void write_to_eeprom(uint32_t value[PARAMETERS_EEPROM]);
 uint32_t read_from_eeprom(uint8_t i);
-void init_eeprom();
+void clear_eeprom();
 uint32_t read_serial_eeprom();
+uint16_t read_crc();
 void dump_eeprom();
 
 #endif /* EEPROM_CONTROL_H_ */

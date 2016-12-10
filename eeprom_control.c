@@ -5,28 +5,33 @@
  *      Author: Bruno
  */
 
-
 #include <avr/io.h>
 #include <avr/eeprom.h>
 #include "config.h"
 #include "eeprom_control.h"
 #include "usi_uart.h"
 
+typedef struct {
+	uint32_t serial;
+	uint16_t crc16_add;
+} eeprom_data;
+
+const eeprom_data EEMEM initEEPROM = { SN, CRC16 };
+
 struct {
 	uint32_t sequence_no;
 	uint32_t data[PARAMETERS_EEPROM];
 } data_block;
 
+#define EEPROM_OFFSET	sizeof(eeprom_data)
 #define DATA_BLOCKS ((EEPROM_SIZE-EEPROM_OFFSET) / sizeof(data_block))
 
 uint32_t last_sequence_no;
 uint16_t queue_tail;
 uint32_t current_value[PARAMETERS_EEPROM];
 
-void init_eeprom() {
+void clear_eeprom() {
 	uint16_t i;
-	uint32_t serial_number = SN;
-	eeprom_write_dword(0, serial_number);
 	for (i = EEPROM_OFFSET; i < EEPROM_SIZE; i++) {
 		eeprom_write_byte((uint8_t *) i, 0xFF);
 	}
@@ -36,13 +41,17 @@ void dump_eeprom() {
 	uint16_t i;
 	uint8_t sth;
 	for (i = 0; i < EEPROM_SIZE; i++) {
-		sth = eeprom_read_byte((uint8_t *)&i);
+		sth = eeprom_read_byte((uint8_t *) &i);
 		usi_uart_send_byte(sth);
 	}
 }
 
 uint32_t read_serial_eeprom() {
-	return eeprom_read_dword(0);
+	return eeprom_read_dword((uint32_t *)0);
+}
+
+uint16_t read_crc(){
+	return eeprom_read_word((uint16_t *)4);
 }
 
 void init_eeprom_control() {

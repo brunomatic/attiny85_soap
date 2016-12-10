@@ -8,11 +8,11 @@
 #ifndef TESTS_H_
 #define TESTS_H_
 
-uint8_t test_info_led(void);
-uint8_t test_pump(void);
+void test_info_led(void);
 uint8_t test_IR(void);
-uint8_t system_self_test(void);
-uint8_t test_EEPROM(void);
+uint8_t test_flash(void);
+uint8_t test_sram(void);
 uint8_t test_battery(void);
+uint8_t system_self_test(void);
 
 #endif /* TESTS_H_ */

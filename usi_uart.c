@@ -7,6 +7,7 @@
 
 /*
  Original Author: Mark Osborne, BecomingMaker.com
+ Adaptation to ATtiny and AVR-GCC compiler: Bruno Matic
  */
 
 /* Supported combinations:
@@ -69,16 +70,16 @@ void usi_uart_send(uint8_t * data) {
 	}
 }
 
-void usi_uart_send_u32(uint8_t before[], uint32_t number, uint8_t after[]){
+void usi_uart_send_u32(uint8_t before[], uint32_t number, uint8_t after[]) {
 	uint8_t temp[11];
-	itoa(number, (char *)temp, 10);
+	itoa(number, (char *) temp, 10);
 	usi_uart_send(before);
 	usi_uart_send(temp);
 	usi_uart_send(after);
 }
 
-uint8_t usi_uart_done(){
-	if(usi_uart_send_state == AVAILABLE){
+uint8_t usi_uart_done() {
+	if (usi_uart_send_state == AVAILABLE) {
 		return 1;
 	}
 	return 0;

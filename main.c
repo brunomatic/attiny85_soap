@@ -21,7 +21,6 @@ uint32_t data[PARAMETERS_EEPROM];
 
 uint16_t pump_cycles;
 uint16_t pump_wait_cycles;
-uint16_t eeprom_store_cycles;
 uint16_t battery_check_cycles;
 uint16_t battery;
 uint8_t battery_low;
@@ -33,9 +32,9 @@ enum states {
 
 enum states state;
 
-ISR(WDT_vect/*TIMER1_COMPA_vect*/) {
+ISR(WDT_vect) {
 	timer_wake = 1;
-	WDTCR |= (1<<WDIE);
+	WDTCR |= (1 << WDIE);
 }
 
 int main(void) {
@@ -47,29 +46,33 @@ int main(void) {
 
 	DDRB &= ~(1 << IR_DETECTOR);
 
-	_delay_ms(10000);
+	PORTB |= (1 << UART);
 
 	sei();
 
+	_delay_ms(10000);
+
 #if CLEAR_EEPROM
-	init_eeprom();
+	clear_eeprom();
 #endif
 
-#if DEBUG > 3
+#if DEBUG > 2
 	dump_eeprom();
 #endif
-
-	init_eeprom_control();
 
 	test_output = system_self_test();
 
 	if (1 != test_output) {
 		usi_uart_send_u32((uint8_t *) "System self-test: FAIL, error: ",
 				test_output, (uint8_t *) "\r\n");
+#if (HALT_ON_ERROR == 1)
 		return 0;
+#endif
 	} else {
 		usi_uart_send((uint8_t *) "System self-test: OKAY\r\n");
 	}
+
+	init_eeprom_control();
 
 	data[0] = read_serial_eeprom();
 	usi_uart_send_u32((uint8_t *) "Serial number: ", data[0],
@@ -81,13 +84,14 @@ int main(void) {
 	data[1] = read_from_eeprom(1);
 	usi_uart_send_u32((uint8_t *) "On count: ", data[1], (uint8_t *) " \r\n");
 
-	timer_wake=0;
+	timer_wake = 0;
 	state = IDLE;
 	pump_cycles = 0;
 	pump_wait_cycles = 0;
-	eeprom_store_cycles = 0;
 	battery_check_cycles = 0;
+
 	data[1]++;
+	write_to_eeprom(data);
 
 	timer_start();
 
@@ -103,8 +107,10 @@ int main(void) {
 					if (ir_gate_detect()) {
 #if DEBUG > 0
 						usi_uart_send((uint8_t *) "Starting pump\r\n");
+						usi_uart_send((uint8_t *) "Storing data to EEPROM\r\n");
 #endif
 						data[0]++;
+						write_to_eeprom(data);
 						PORTB |= (1 << INFO_LED) | (1 << PUMP);
 						pump_cycles = PUMP_CYCLES;
 						state = PUMP_ACTIVE;
@@ -133,19 +139,6 @@ int main(void) {
 			}
 
 			/**
-			 *  EEPROM store
-			 */
-			if (0 == eeprom_store_cycles) {
-				write_to_eeprom(data);
-#if DEBUG > 0
-				usi_uart_send((uint8_t *) "Storing data to EEPROM\r\n");
-#endif
-				eeprom_store_cycles = STORE_EEPROM_CYCLES;
-			} else {
-				eeprom_store_cycles--;
-			}
-
-			/**
 			 *  Battery check
 			 */
 			if (0 == battery_check_cycles) {
@@ -166,7 +159,11 @@ int main(void) {
 
 			timer_wake = 0;
 
-			while(!usi_uart_done());
+			/*
+			 * Wait for UART to finish sending since it is using interrupts from timer0
+			 */
+			while (!usi_uart_done())
+				;
 
 			power_save();
 		}

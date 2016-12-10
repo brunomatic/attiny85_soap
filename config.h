@@ -10,75 +10,75 @@
 
 /**
  * General settings
+ * IMPORTANT: one cycle = ~125ms (WDT is used for MCU wake ups to conserve battery)
  */
-#define DEBUG 1								// debug levels 4-highest(+EEPROM dumping) 0-no debug info
-#define CLEAR_EEPROM 0						// 1 - writes serial number and erases EEPROM on startup, 0 - EEPROM intacted
-
+#define DEBUG 1								// Debug levels: 3-highest(+EEPROM dumping) 0-no debug info
+#define HALT_ON_ERROR 0						// Halt on system self test failure
+#define CLEAR_EEPROM 0						// 1 - erases EEPROM usage data on startup, 0 - EEPROM intacted
+#define SN		0x00000001					// Serial number of device stored in EEPROM at 0
+#define CRC16	0x0242						// CRC16 stored in EEPROM at location 4
 
 /**
  *  Pin layout definition
  */
-
-#define INFO_LED	PB4
 #define IR_EMITTER	PB0
+#define UART		PB1
 #define IR_DETECTOR	PB2
 #define PUMP		PB3
-#define UART		PB1
+#define INFO_LED	PB4
+
+
+/*
+ * SRAM memory parameters
+ */
+#define SRAM_START_ADR	96
+#define SRAM_END_ADR	RAMEND
+
+
+/*
+ * Flash memory parameters
+ */
+#define FLASH_END	FLASHEND
 
 
 /**
- * EEPROM settings
+ * EEPROM memory and control settings
  */
 #define EEPROM_SIZE	512						// Size of MCU EEPROM in bytes
-#define EEPROM_OFFSET 4						// Initial offset of EEPROM, if specified 0-EEPROM_OFFSET is not used by MCU EEPROM control
-#define SN		0x00000001					// Serial number of device
 #define PARAMETERS_EEPROM	2				// Number of parameters periodically stored to EEPROM by EEPROM control
-#define STORE_EEPROM_CYCLES	3000			// Storing period ( each cycle 100ms) default: 3000(five minutes),max: 2^16
-
 
 /**
  * IR gate settings
  */
 #define IR_GATE_DELAY 8						// Delay between activating IR emitter and reading receiver in us
 
-
-
-#define PUMP_CYCLES 30						// Pump active intervals
-#define PUMP_WAIT_CYCLES 200				// Pump reactivation wait time( between activations )
-
 /**
- *  Timer settings
+ * Pump settings
  */
-#define TIMER WDT							// Select between timer1 and WDT as interrupt source for sampling
-#if (TIMER == TIMER1)						// If WDT selected a cycle is ~125ms if TIMER1 it can be set
-#define SAMPLE_INTERVAL 100000				// Sample interval in us
-#define TIMER_PRESCALER 8192
-#define TIMER_COUNTER ((SAMPLE_INTERVAL)/(1000000/(F_CPU/TIMER_PRESCALER)))
-#endif
+#define PUMP_CYCLES 24						// Pump active intervals, default: 24(~3 seconds)
+#define PUMP_WAIT_CYCLES 160				// Pump reactivation wait time( between activations ), default: 160(~20 seconds)
+
 
 /**
  * Battery settings
  */
-#define MIN_VOLTAGE	1750					// Minimal operating voltage in mV
-#define LOW_BATTERY_VOLTAGE 2000			// Low battery warning - info led blinks if voltage below this
-#define BATTERY_CHECK_CYCLES 6000			// Battery check period - default: 6000(ten minutes), max:2^16
-
+#define LOW_BATTERY_VOLTAGE 3000			// Low battery warning - info led blinks if voltage below this
+#define BATTERY_CHECK_CYCLES 4800			// Battery check period - default: 4800(~10 minutes)
 
 /**
  * Power save system settings
  */
-#if (TIMER == WDT)
 #define POWER_SAVE_MODE	SLEEP_MODE_PWR_DOWN		// MCU power save mode between wake ups
-#else
-#define POWER_SAVE_MODE	SLEEP_MODE_IDLE
-#endif
 
 /**
  * USI UART emulation
  */
-#define BAUDRATE            9600
-#define STOPBITS            1
+#define BAUDRATE            9600				// Possible baudrates at 8MHz: 9600bps or 19200bps
+#define STOPBITS            1					// Number of stop bits
 
+/*
+ * Timer0 parameters calculation for usage with USI to form UART
+ */
 #define CYCLES_PER_BIT       ( (F_CPU) / (BAUDRATE) )
 #if (CYCLES_PER_BIT > 255)
 #define DIVISOR             8
@@ -88,6 +88,5 @@
 #define CLOCKSELECT         1
 #endif
 #define FULL_BIT_TICKS      ( (CYCLES_PER_BIT) / (DIVISOR) )
-
 
 #endif /* CONFIG_H_ */
