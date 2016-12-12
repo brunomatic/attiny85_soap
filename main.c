@@ -32,6 +32,7 @@ enum states {
 
 enum states state;
 
+
 ISR(WDT_vect) {
 	timer_wake = 1;
 	WDTCR |= (1 << WDIE);

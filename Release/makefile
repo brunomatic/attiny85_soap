@@ -30,56 +30,56 @@ endif
 
 # Add inputs and outputs from these tool invocations to the build variables 
 LSS += \
-attiny_proto.lss \
+attiny85_soap.lss \
 
 FLASH_IMAGE += \
-attiny_proto.hex \
+attiny85_soap.hex \
 
 EEPROM_IMAGE += \
-attiny_proto.eep \
+attiny85_soap.eep \
 
 SIZEDUMMY += \
 sizedummy \
 
 
 # All Target
-all: attiny_proto.elf secondary-outputs
+all: attiny85_soap.elf secondary-outputs
 
 # Tool invocations
-attiny_proto.elf: $(OBJS) $(USER_OBJS)
+attiny85_soap.elf: $(OBJS) $(USER_OBJS)
 	@echo 'Building target: $@'
 	@echo 'Invoking: AVR C Linker'
-	avr-gcc -Wl,-Map,attiny_proto.map -mmcu=attiny85 -o "attiny_proto.elf" $(OBJS) $(USER_OBJS) $(LIBS)
+	avr-gcc -Wl,-Map,attiny85_soap.map -mmcu=attiny85 -o "attiny85_soap.elf" $(OBJS) $(USER_OBJS) $(LIBS)
 	@echo 'Finished building target: $@'
 	@echo ' '
 
-attiny_proto.lss: attiny_proto.elf
+attiny85_soap.lss: attiny85_soap.elf
 	@echo 'Invoking: AVR Create Extended Listing'
-	-avr-objdump -h -S attiny_proto.elf  >"attiny_proto.lss"
+	-avr-objdump -h -S attiny85_soap.elf  >"attiny85_soap.lss"
 	@echo 'Finished building: $@'
 	@echo ' '
 
-attiny_proto.hex: attiny_proto.elf
+attiny85_soap.hex: attiny85_soap.elf
 	@echo 'Create Flash image (ihex format)'
-	-avr-objcopy -R .eeprom -R .fuse -R .lock -R .signature -O ihex attiny_proto.elf  "attiny_proto.hex"
+	-avr-objcopy -R .eeprom -R .fuse -R .lock -R .signature -O ihex attiny85_soap.elf  "attiny85_soap.hex"
 	@echo 'Finished building: $@'
 	@echo ' '
 
-attiny_proto.eep: attiny_proto.elf
+attiny85_soap.eep: attiny85_soap.elf
 	@echo 'Create eeprom image (ihex format)'
-	-avr-objcopy -j .eeprom --no-change-warnings --change-section-lma .eeprom=0 -O ihex attiny_proto.elf  "attiny_proto.eep"
+	-avr-objcopy -j .eeprom --no-change-warnings --change-section-lma .eeprom=0 -O ihex attiny85_soap.elf  "attiny85_soap.eep"
 	@echo 'Finished building: $@'
 	@echo ' '
 
-sizedummy: attiny_proto.elf
+sizedummy: attiny85_soap.elf
 	@echo 'Invoking: Print Size'
-	-avr-size --format=avr --mcu=attiny85 attiny_proto.elf
+	-avr-size --format=avr --mcu=attiny85 attiny85_soap.elf
 	@echo 'Finished building: $@'
 	@echo ' '
 
 # Other Targets
 clean:
-	-$(RM) $(FLASH_IMAGE)$(ELFS)$(OBJS)$(ASM_DEPS)$(EEPROM_IMAGE)$(S_DEPS)$(SIZEDUMMY)$(S_UPPER_DEPS)$(LSS)$(C_DEPS) attiny_proto.elf
+	-$(RM) $(FLASH_IMAGE)$(ELFS)$(OBJS)$(ASM_DEPS)$(EEPROM_IMAGE)$(S_DEPS)$(SIZEDUMMY)$(S_UPPER_DEPS)$(LSS)$(C_DEPS) attiny85_soap.elf
 	-@echo ' '
 
 secondary-outputs: $(LSS) $(FLASH_IMAGE) $(EEPROM_IMAGE) $(SIZEDUMMY)

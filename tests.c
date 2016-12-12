@@ -17,6 +17,8 @@
 #include "eeprom_control.h"
 #include "tests.h"
 
+uint8_t sram_ok = 0;
+
 uint8_t test_battery(void) {
 	uint16_t voltage;
 
@@ -75,39 +77,13 @@ uint8_t test_flash(void) {
 }
 
 
+
 uint8_t test_sram(void) {
-	volatile register uint8_t *p_val, i, sav;
-	register uint8_t val;
-	register uint16_t h;
+	uint8_t * init_test_result = (uint8_t *)SRAM_END_ADR;
 
-	/* test all locations with 0x55, 0xAA and complement of address value */
-	for (h = SRAM_START_ADR; h <= SRAM_END_ADR; h++) {
-		// read and store location
-		p_val = ((uint8_t *) (h));
-		sav = *p_val;
-		// write and verify
-		*p_val = 0x55;
-		i = *p_val;
-		if (i != 0x55) {
-			return SRAM_ERR;
-		}
-		// write and verify
-		*p_val = 0xAA;
-		i = *p_val;
-		if (i != 0xAA) {
-			return SRAM_ERR;
-		}
-		// address decoder check
-		val = ~((uint16_t) p_val);
-		*p_val = val;
-		i = *p_val;
-		if (i != val) {
-			return SRAM_ERR;
-		}
+	if(*init_test_result==0x01)
+		return SRAM_ERR;
 
-		// restore stored value
-		*p_val = sav;
-	}
 	return NO_ERROR;
 }
 

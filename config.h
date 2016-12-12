@@ -73,7 +73,7 @@
 /**
  * USI UART emulation
  */
-#define BAUDRATE            9600				// Possible baudrates at 8MHz: 9600bps or 19200bps
+#define BAUDRATE            19200				// Possible baudrates at 8MHz: 9600bps or 19200bps
 #define STOPBITS            1					// Number of stop bits
 
 /*
