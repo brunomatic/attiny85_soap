@@ -37,6 +37,19 @@ static uint8_t reverse_byte(uint8_t x) {
 	return x;
 }
 
+/**
+ * Configure timer0:
+ * 		- CTC mode
+ * 		- set prescaler based on baudrate
+ * 		- fill compare(0CR0A) register
+ * 		- start counting
+ *
+ * 	Configure USI:
+ * 		- fill send register with start bit and 7 data bits
+ * 		- set three wire mode to use PB1 as output pin
+ * 		- set pin as output
+ * 		- set bit counter to 8 bits
+ */
 void usi_uart_send_byte(uint8_t data) {
 	while (usi_uart_send_state != AVAILABLE)
 		;
@@ -44,22 +57,17 @@ void usi_uart_send_byte(uint8_t data) {
 	usi_uart_send_state = FIRST;
 	usi_uart_tx_data = reverse_byte(data);
 
-	// Configure Timer0
-	TCCR0A = 2 << WGM00;                      // CTC mode
-	TCCR0B = CLOCKSELECT;                   // Set prescaler to clk or clk /8
-	GTCCR |= 1 << PSR0;                     // Reset prescaler
-	OCR0A = FULL_BIT_TICKS;                 // Trigger every full bit width
-	TCNT0 = 0;                              // Count up from 0
+	TCCR0A = 2 << WGM00;
+	TCCR0B = CLOCKSELECT;
+	GTCCR |= 1 << PSR0;
+	OCR0A = FULL_BIT_TICKS;
+	TCNT0 = 0;
 
-	// Configure USI to send high start bit and 7 bits of data
-	USIDR = 0x00 |                            // Start bit (low)
-			usi_uart_tx_data >> 1;    // followed by first 7 bits of serial data
-	USICR = (1 << USIOIE) |                // Enable USI Counter OVF interrupt.
-			(0 << USIWM1) | (1 << USIWM0) | // Select three wire mode to ensure USI written to PB1
-			(0 << USICS1) | (1 << USICS0) | (0 << USICLK); // Select Timer0 Compare match as USI Clock source.
-	DDRB |= (1 << PB1);                        // Configure USI_DO as output.
-	USISR = 1 << USIOIF |                  // Clear USI overflow interrupt flag
-			(16 - 8);                     // and set USI counter to count 8 bits
+	USIDR = 0x00 | usi_uart_tx_data >> 1;
+	USICR = (1 << USIOIE) | (0 << USIWM1) | (1 << USIWM0) | (0 << USICS1)
+			| (1 << USICS0) | (0 << USICLK);
+	DDRB |= (1 << UART);
+	USISR = 1 << USIOIF | (16 - 8);
 }
 
 void usi_uart_send(uint8_t * data) {
@@ -85,18 +93,20 @@ uint8_t usi_uart_done() {
 	return 0;
 }
 
-// USI overflow interrupt indicates we have sent a buffer
+/**
+ * Overflow interrupt handling:
+ * 	- switch sending data: change state to second, send last bit of data and stop bits
+ * 	- finish sending: change state to available, set port high and disable USI counting
+ */
 ISR (USI_OVF_vect) {
 	if (usi_uart_send_state == FIRST) {
 		usi_uart_send_state = SECOND;
-		USIDR = usi_uart_tx_data << 7  // Send last 1 bit of data
-		| 0x7F;                           // and stop bits (high)
-		USISR = 1 << USIOIF |              // Clear USI overflow interrupt flag
-				(16 - (1 + (STOPBITS))); // Set USI counter to send last data bit and stop bits
+		USIDR = usi_uart_tx_data << 7 | 0x7F;
+		USISR = 1 << USIOIF | (16 - (1 + (STOPBITS)));
 	} else {
-		PORTB |= 1 << PB1;                    // Ensure output is high
-		USICR = 0;                            // Disable USI.
-		USISR |= 1 << USIOIF;                   // clear interrupt flag
+		PORTB |= 1 << UART;
+		USICR = 0;
+		USISR |= 1 << USIOIF;
 
 		usi_uart_send_state = AVAILABLE;
 	}

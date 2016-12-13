@@ -1,6 +1,8 @@
 /*
  * ir_gate.c
  *
+ *	Implements simple IR gate driver for ease of use
+ *
  *  Created on: 8. pro 2016.
  *      Author: Bruno
  */

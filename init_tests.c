@@ -15,7 +15,7 @@
 #include <avr/io.h>
 #include "config.h"
 
-void sram_init_test(void) __attribute__((section(".init3"))) __attribute((naked));
+void sram_init_test(void) __attribute__((section(".init3"))) __attribute__((naked));
 void sram_init_test() {
 
 	register uint8_t * data;
@@ -85,7 +85,7 @@ void sram_init_test() {
 
 	}
 
-	/* Intra-word march test. */
+	/* Test phase 6: Atemel's recommended additional test. */
 	for (data = (uint8_t *) SRAM_START_ADR; (uint16_t) data <= SRAM_END_ADR;
 			data++) {
 		*data = 0x55;
@@ -99,9 +99,10 @@ void sram_init_test() {
 	}
 
 
-
+	/*
+	 * Store error value on stack for later check
+	 */
 	if (error) {
-		__asm(" 	ldi r24, 0x01 	\n"
-				"	push r24		\n");
+		asm volatile("		push %0 	\n\t" : "=r" (error));
 	}
 }

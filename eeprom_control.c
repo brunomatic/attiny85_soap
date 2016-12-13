@@ -1,6 +1,10 @@
 /*
  * eeprom_control.c
  *
+ *	Simple EEPROM control system focused on extending lifetime of memory.
+ *	It implements a circular buffer-like system of storing.
+ *	It buffers the values on write and read for speed.
+ *
  *  Created on: 8. pro 2016.
  *      Author: Bruno
  */
@@ -13,22 +17,27 @@
 
 typedef struct {
 	uint32_t serial;
-	uint16_t crc16_add;
+	uint16_t crc16;
+	uint8_t  pump_cycles;
 } eeprom_data;
 
-const eeprom_data EEMEM initEEPROM = { SN, CRC16 };
+/* This data is by default stored on address 0 in EEPROM memory */
+const eeprom_data EEMEM initEEPROM = { SN, CRC16, PUMP_CYCLES};
 
+
+/* Data structure and parameters*/
 struct {
 	uint32_t sequence_no;
 	uint32_t data[PARAMETERS_EEPROM];
 } data_block;
 
-#define EEPROM_OFFSET	sizeof(eeprom_data)
-#define DATA_BLOCKS ((EEPROM_SIZE-EEPROM_OFFSET) / sizeof(data_block))
+#define EEPROM_OFFSET	sizeof(eeprom_data)									/* For ensuring that initial data is not overwritten*/
+#define DATA_BLOCKS ((EEPROM_SIZE-EEPROM_OFFSET) / sizeof(data_block))		/* Number of available locations for data block*/
 
 uint32_t last_sequence_no;
 uint16_t queue_tail;
 uint32_t current_value[PARAMETERS_EEPROM];
+
 
 void clear_eeprom() {
 	uint16_t i;
@@ -37,6 +46,7 @@ void clear_eeprom() {
 	}
 }
 
+/* For debugging purposes */
 void dump_eeprom() {
 	uint16_t i;
 	uint8_t sth;
@@ -54,6 +64,14 @@ uint16_t read_crc(){
 	return eeprom_read_word((uint16_t *)4);
 }
 
+uint8_t read_pump_cycles(){
+	return eeprom_read_byte((uint8_t *)6);
+}
+
+
+/*
+ *	On power on this function ensures proper initialization of control system
+ */
 void init_eeprom_control() {
 	uint16_t i;
 	uint8_t j;
@@ -77,6 +95,7 @@ void init_eeprom_control() {
 		}
 	}
 }
+
 
 void write_to_eeprom(uint32_t * value) {
 	uint8_t j;

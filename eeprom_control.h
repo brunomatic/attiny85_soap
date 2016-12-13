@@ -14,6 +14,7 @@ uint32_t read_from_eeprom(uint8_t i);
 void clear_eeprom();
 uint32_t read_serial_eeprom();
 uint16_t read_crc();
+uint8_t read_pump_cycles();
 void dump_eeprom();
 
 #endif /* EEPROM_CONTROL_H_ */

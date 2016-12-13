@@ -1,12 +1,14 @@
 /*
  * timer.c
  *
+ *	Watchdog timer initialization function
+ *
  *  Created on: 7. pro 2016.
  *      Author: Bruno
  */
 
 #include <avr/io.h>
-#include <avr/wdt.h>        // Supplied Watch Dog Timer Macros
+#include <avr/wdt.h>
 #include "config.h"
 #include "timer.h"
 

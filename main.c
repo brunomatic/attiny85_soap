@@ -25,7 +25,6 @@ enum states {
 
 enum states state;
 
-
 ISR(WDT_vect) {
 	timer_wake = 1;
 	WDTCR |= (1 << WDIE);
@@ -42,7 +41,6 @@ int main(void) {
 	uint8_t test_output = 0;
 
 	OSCCAL = 108;
-
 
 	DDRB |= (1 << UART) | (1 << INFO_LED) | (1 << IR_EMITTER) | (1 << PUMP);
 
@@ -114,7 +112,7 @@ int main(void) {
 						data[0]++;
 						write_to_eeprom(data);
 						PORTB |= (1 << INFO_LED) | (1 << PUMP);
-						pump_cycles = PUMP_CYCLES;
+						pump_cycles = read_pump_cycles();
 						state = PUMP_ACTIVE;
 					}
 				} else {
@@ -150,10 +148,19 @@ int main(void) {
 				} else {
 					battery_low = 0;
 				}
+
 #if DEBUG > 0
 				usi_uart_send_u32((uint8_t *) "Battery voltage: ", battery,
 						(uint8_t *) " mV\r\n");
 #endif
+				if (battery < MIN_OPERATING_VOLTAGE) {
+#if DEBUG > 0
+					usi_uart_send((uint8_t *) "System shutdown");
+#endif
+					while (!usi_uart_done())
+									;
+					return 0;
+				}
 				battery_check_cycles = BATTERY_CHECK_CYCLES;
 			} else {
 				battery_check_cycles--;
@@ -166,8 +173,8 @@ int main(void) {
 			 */
 			while (!usi_uart_done())
 				;
-
-			power_save();
 		}
+
+		power_save();
 	}
 }

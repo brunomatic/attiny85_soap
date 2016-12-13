@@ -1,6 +1,8 @@
 /*
  * power_control.c
  *
+ *	Power control of MCU is handled here.
+ *
  *  Created on: 8. pro 2016.
  *      Author: Bruno
  */
