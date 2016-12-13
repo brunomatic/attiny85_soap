@@ -16,15 +16,14 @@
 #include "errors.h"
 #include "eeprom_control.h"
 #include "tests.h"
-
-uint8_t sram_ok = 0;
+#include "usi_uart.h"
 
 uint8_t test_battery(void) {
 	uint16_t voltage;
 
 	voltage = readVcc();
 	if (voltage < LOW_BATTERY_VOLTAGE) {
-		return 0;
+		return BATT_LOW;
 	}
 	return NO_ERROR;
 }
@@ -63,12 +62,20 @@ uint8_t test_flash(void) {
 	uint16_t crc_stored = 0;
 	uint16_t flash_index = 0;
 
-	for (flash_index = 0; flash_index <= FLASH_END; flash_index++) {
+	for (flash_index = 0; flash_index < FLASH_END-1; flash_index++) {
 		byte = pgm_read_byte(flash_index);
-		crc_calc = _crc_ccitt_update(crc_calc, byte);
+		crc_calc = _crc16_update(crc_calc, byte);
 	}
 
-	crc_stored = read_crc();
+
+	crc_stored = pgm_read_word(FLASH_END-1);
+
+	usi_uart_send_u32((uint8_t *) "CRC calc: ", crc_calc,
+							(uint8_t *) "\r\n");
+
+
+	usi_uart_send_u32((uint8_t *) "CRC stored: ", crc_stored,
+							(uint8_t *) "\r\n");
 
 	if (crc_stored == crc_calc)
 		return NO_ERROR;
@@ -102,7 +109,7 @@ uint8_t system_self_test(void) {
 		return test_output;
 	}
 
-	//test_output = test_flash();
+	test_output = test_flash();
 	if (NO_ERROR != test_output) {
 		return test_output;
 	}

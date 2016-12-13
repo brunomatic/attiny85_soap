@@ -17,13 +17,6 @@
 #include "power_control.h"
 #include "tests.h"
 
-uint32_t data[PARAMETERS_EEPROM];
-
-uint16_t pump_cycles;
-uint16_t pump_wait_cycles;
-uint16_t battery_check_cycles;
-uint16_t battery;
-uint8_t battery_low;
 volatile uint8_t timer_wake;
 
 enum states {
@@ -39,9 +32,17 @@ ISR(WDT_vect) {
 }
 
 int main(void) {
+
+	uint32_t data[PARAMETERS_EEPROM];
+	uint16_t pump_cycles;
+	uint16_t pump_wait_cycles;
+	uint16_t battery_check_cycles;
+	uint16_t battery;
+	uint8_t battery_low = 0;
+	uint8_t test_output = 0;
+
 	OSCCAL = 108;
 
-	uint8_t test_output = 0;
 
 	DDRB |= (1 << UART) | (1 << INFO_LED) | (1 << IR_EMITTER) | (1 << PUMP);
 
