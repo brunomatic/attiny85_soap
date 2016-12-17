@@ -18,7 +18,6 @@
 
 #include <avr/io.h>
 #include <avr/interrupt.h>
-#include <avr/io.h>
 #include <stdlib.h>
 #include "usi_uart.h"
 #include "config.h"

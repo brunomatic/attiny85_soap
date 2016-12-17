@@ -98,7 +98,6 @@ void sram_init_test() {
 
 	}
 
-
 	/*
 	 * Store error value on stack for later check
 	 */
